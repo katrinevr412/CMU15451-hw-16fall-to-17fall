@@ -1,0 +1,18 @@
+The idea is to use a binary search. It's trivial that the lower bound is 0.0 and one possible upper bound is reached when all unknown nodes have the same height as the lowest known nodes.
+(unknown nodes means a node with unknown height and similar for known nodes)
+So the problem turns into how to determine whether there is a solution for a particular maximum slope value k. First we write down all the constraints:
+For the actual edges' part it's simple: for every edge (i,j) we have
+hi - hj <= len(i,j) * k
+and
+hj - hi <= len(i,j) * k
+The tricky part is the constraints for the known nodes: for each pair of known nodes (k1, k2) we can have:
+hk1 - hk2 <= Hk1 - Hk2
+and
+hk2 - hk1 <= Hk2 - Hk1
+where the uppercase H's are the actual value for the known nodes.
+Because we want to minimize our constraints (and in fact there is another even more important reason that we'll discuss later) we only use all the pairs involving the lowest known node (denoted by lk), which obviously suffices:
+hki - hlk <= Hki - Hlk
+and
+hlk - hki <= Hlk - Hki
+Note that now all the constraints are in the form hi - hj <= C, we can apply the algorithm introduced in Chapter 24.4 of CLRS: we construct a new graph using these constraints and it has a solution if and only if there is no negative cycle in that graph.
+The core part comes: in the original algorithm, it used Bellman-Ford which is O(n3), not acceptable for n = 1000. But we noticed that, by always choosing the lowest known node as the source node, the negative weight edges are actually all those edges coming into the lowest known node and all other edges are positive. So we can use Dijkstra: first ignore these negative edges, and run Dijkstra with lk as the source node. After propagating to all other known nodes, it suffices to check for each known node whether the shortest distance from lk to that node is smaller than the absolute value of the negative edge coming from that known node, and reject if it is smaller.
